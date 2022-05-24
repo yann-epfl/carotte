@@ -21,7 +21,7 @@ parser.add_argument('-i','--ip-address',
                     help='IP Address of robot')
 # parser.add_argument('--instance-threshold', default=0.0, type=float,
 #                     help='Defines the threshold of the detection score')
-parser.add_argument('-d', '--downscale', default=8, type=int,
+parser.add_argument('-d', '--downscale', default=4, type=int,
                     help=('downscale of the received image'))
 # parser.add_argument('--square-edge', default=401, type=int,
 #                     help='square edge of input images')
