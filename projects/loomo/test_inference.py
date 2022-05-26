@@ -34,7 +34,7 @@ h = int(abs(y1-y2))
 x = x1+w/2
 y = y1-h/2
 
-pred_bboxes[0] = [x, y, w, h]
-pred_y_label[0] = 1
+pred_bboxes = [x, y, w, h]
+pred_y_label = 1
 
-print(pred_bboxes[0], pred_y_label[0])
+print(pred_bboxes, pred_y_label)
