@@ -3,10 +3,13 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import os
+import PIL
 from PIL import Image
 
 import torch
 import torch.nn.functional as F
+
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='best3.pt')
 
 
 class Net(torch.nn.Module):
@@ -113,6 +116,21 @@ class Detector(object):
             pred_y_label = pred_y_logit > 0.5
             pred_bboxes = pred_y_box * self.img_size
             # pred_bboxes = pred_bboxes.reshape(len(pred_bboxes), num_objects, -1)
+
+        results = model(img)
+	    if(results.xyxy[0].nelement()!=0):
+	      x1 = results.xyxy[0][0][0].cpu().detach().numpy()
+	      y1 = results.xyxy[0][0][1].cpu().detach().numpy()
+	      x2 = results.xyxy[0][0][2].cpu().detach().numpy()
+	      y2 = results.xyxy[0][0][3].cpu().detach().numpy()
+
+	    w = int(abs(x1-x2))
+        h = int(abs(y1-y2))
+        x = x1+w/2
+        y = y1-h/2
+
+        pred_bboxes[0] = [x, y, w, h]
+        pred_y_label[0] = 1
 
         return pred_bboxes[0], pred_y_label[0]
 
