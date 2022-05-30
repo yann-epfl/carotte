@@ -320,136 +320,136 @@ class Detector(object):
             # pred_bboxes = pred_bboxes.reshape(len(pred_bboxes), num_objects, -1)
 
         if not(self.init):
-			results = self.model_best(img)
-			if(results.xyxy[0].nelement()!=0):
-		    	x1 = results.xyxy[0][0][0].cpu().detach().numpy()
-		        y1 = results.xyxy[0][0][1].cpu().detach().numpy()
-		        x2 = results.xyxy[0][0][2].cpu().detach().numpy()
-		        y2 = results.xyxy[0][0][3].cpu().detach().numpy()
+            results = self.model_best(img)
+            if(results.xyxy[0].nelement()!=0):
+                x1 = results.xyxy[0][0][0].cpu().detach().numpy()
+                y1 = results.xyxy[0][0][1].cpu().detach().numpy()
+                x2 = results.xyxy[0][0][2].cpu().detach().numpy()
+                y2 = results.xyxy[0][0][3].cpu().detach().numpy()
 
-		        x_star=int((abs(x2-x1)/2)+x1)
-		        y_star=int((abs(y2-y1)/2)+y1)
+                x_star=int((abs(x2-x1)/2)+x1)
+                y_star=int((abs(y2-y1)/2)+y1)
 
-	        results_p = self.model_p(img)
-	        for i in range(int(results_p.xyxy[0].nelement()/6)): #for on the number of person detected
-	          if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0): #if class person and confidence over 60%
-	            x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
-	            y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
-	            x2 = int(results_p.xyxy[0][i][2].cpu().detach().numpy())
-	            y2 = int(results_p.xyxy[0][i][3].cpu().detach().numpy())
+            results_p = self.model_p(img)
+            for i in range(int(results_p.xyxy[0].nelement()/6)): #for on the number of person detected
+              if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0): #if class person and confidence over 60%
+                x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
+                y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
+                x2 = int(results_p.xyxy[0][i][2].cpu().detach().numpy())
+                y2 = int(results_p.xyxy[0][i][3].cpu().detach().numpy())
 
-	            w = int(abs(x1-x2))
-	            h = int(abs(y1-y2))
-	            x = x1+w/2
-	            y = y1+h/2
-	            a = w/h
+                w = int(abs(x1-x2))
+                h = int(abs(y1-y2))
+                x = x1+w/2
+                y = y1+h/2
+                a = w/h
 
-	            if (x_star in range(x1,x2) and (y_star in range(y1,y2))):
-		        	bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
+                if (x_star in range(x1,x2) and (y_star in range(y1,y2))):
+                    bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
 
-					bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+                    bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
-					img_cropped = img[y1:y2,x1:x2]
-					#cv2_imshow(img_cropped)
-					features = extractor(img_cropped)
-					features_init = features.cpu().numpy()[0]
-					#print(features_init.cpu().numpy()[0])
+                    img_cropped = img[y1:y2,x1:x2]
+                    #cv2_imshow(img_cropped)
+                    features = extractor(img_cropped)
+                    features_init = features.cpu().numpy()[0]
+                    #print(features_init.cpu().numpy()[0])
 
-					#initiate Kalman filter
-					measurement = [x, y, a, h]
-					mean, cov = self.kf.initiate(measurement)
-					self.init = 1
+                    #initiate Kalman filter
+                    measurement = [x, y, a, h]
+                    mean, cov = self.kf.initiate(measurement)
+                    self.init = 1
 
-					bbox = [x, y, w, h]
-					label = 1
-					return bbox, label
+                    bbox = [x, y, w, h]
+                    label = 1
+                    return bbox, label
 
-	    elif self.init:
-	    	reid_measurement_found = 0
-			kalman_measurement_found = 0
-			mean_pred, cov_pred = self.kf.predict(mean, cov)
+        elif self.init:
+            reid_measurement_found = 0
+            kalman_measurement_found = 0
+            mean_pred, cov_pred = self.kf.predict(mean, cov)
 
-			#calc pred bbox parameters
-			x_pred = mean_pred[0]
-			y_pred = mean_pred[1]
-			a_pred = mean_pred[2]
-			h_pred = mean_pred[3]
-			w_pred = a_pred*h_pred
-			x1_pred = int(x_pred-w_pred/2)
-			y1_pred = int(y_pred-h_pred/2)
-			x2_pred = int(x_pred+w_pred/2)
-			y2_pred = int(y_pred+h_pred/2)
+            #calc pred bbox parameters
+            x_pred = mean_pred[0]
+            y_pred = mean_pred[1]
+            a_pred = mean_pred[2]
+            h_pred = mean_pred[3]
+            w_pred = a_pred*h_pred
+            x1_pred = int(x_pred-w_pred/2)
+            y1_pred = int(y_pred-h_pred/2)
+            x2_pred = int(x_pred+w_pred/2)
+            y2_pred = int(y_pred+h_pred/2)
 
-			#add pred bbox
-			#bbox_array = cv2.rectangle(bbox_array,(x1_pred,y1_pred),(x2_pred,y2_pred),(0,0,255),2)
-			#bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+            #add pred bbox
+            #bbox_array = cv2.rectangle(bbox_array,(x1_pred,y1_pred),(x2_pred,y2_pred),(0,0,255),2)
+            #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
-			results_p = self.model_p(img)
-			for i in range(int(results_p.xyxy[0].nelement()/6)):
-	        	if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0):
-					x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
-					y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
-					x2 = int(results_p.xyxy[0][i][2].cpu().detach().numpy())
-					y2 = int(results_p.xyxy[0][i][3].cpu().detach().numpy())
+            results_p = self.model_p(img)
+            for i in range(int(results_p.xyxy[0].nelement()/6)):
+                if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0):
+                    x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
+                    y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
+                    x2 = int(results_p.xyxy[0][i][2].cpu().detach().numpy())
+                    y2 = int(results_p.xyxy[0][i][3].cpu().detach().numpy())
 
-					w = int(abs(x1-x2))
-					h = int(abs(y1-y2))
-					x = x1+w/2
-					y = y1+h/2
-					a = w/h
+                    w = int(abs(x1-x2))
+                    h = int(abs(y1-y2))
+                    x = x1+w/2
+                    y = y1+h/2
+                    a = w/h
 
-					img_cropped = img[y1:y2,x1:x2]
-					features = extractor(img_cropped)
-					features_new = features.cpu().numpy()[0]
-					similarity = cosine_sim(features_init,features_new)
-					#print(i)
-					#print(similarity)
-					#cv2_imshow(img_cropped)
-					if (similarity>0.80): #and (euclid_dist(x,y,x_pred,y_pred)<300):
+                    img_cropped = img[y1:y2,x1:x2]
+                    features = extractor(img_cropped)
+                    features_new = features.cpu().numpy()[0]
+                    similarity = cosine_sim(features_init,features_new)
+                    #print(i)
+                    #print(similarity)
+                    #cv2_imshow(img_cropped)
+                    if (similarity>0.80): #and (euclid_dist(x,y,x_pred,y_pred)<300):
 
-			            measurement = [x, y, a, h]
-			            reid_measurement_found = 1
-			            self.lost_count = 0
+                        measurement = [x, y, a, h]
+                        reid_measurement_found = 1
+                        self.lost_count = 0
 
-			            #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
-			            #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
-	          
-	          	elif(euclid_dist(x,y,x_pred,y_pred)<100) and not(reid_measurement_found) and not(self.lost):
+                        #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
+                        #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+              
+                elif(euclid_dist(x,y,x_pred,y_pred)<100) and not(reid_measurement_found) and not(self.lost):
 
-		            measurement = [x, y, a, h]
-		            kalman_measurement_found = 1
-		            self.lost_count = 0
+                    measurement = [x, y, a, h]
+                    kalman_measurement_found = 1
+                    self.lost_count = 0
 
-		            #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,255,0),2)
-		            #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+                    #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,255,0),2)
+                    #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
-	      	if(not(reid_measurement_found) and not(kalman_measurement_found)):
-	        	self.lost_count += 1
+            if(not(reid_measurement_found) and not(kalman_measurement_found)):
+                self.lost_count += 1
 
-	      	if(self.lost_count>=5):
-	        	self.lost = 1
-	      	else:
-	        	self.lost = 0
+            if(self.lost_count>=5):
+                self.lost = 1
+            else:
+                self.lost = 0
 
-			mean, cov = self.kf.update(mean_pred, cov_pred, measurement)
-			#calc update bbox parameters
-			x = mean[0]
-			y = mean[1]
-			a = mean[2]
-			h = mean[3]
-			w = a*h
-			x1 = int(x-w/2)
-			y1 = int(y-h/2)
-			x2 = int(x+w/2)
-			y2 = int(y+h/2)
+            mean, cov = self.kf.update(mean_pred, cov_pred, measurement)
+            #calc update bbox parameters
+            x = mean[0]
+            y = mean[1]
+            a = mean[2]
+            h = mean[3]
+            w = a*h
+            x1 = int(x-w/2)
+            y1 = int(y-h/2)
+            x2 = int(x+w/2)
+            y2 = int(y+h/2)
 
-			#add update bbox
-			if (not(self.lost)):
-		        bbox = [x, y, w, h]
-				label = 1
-				return bbox, label
+            #add update bbox
+            if (not(self.lost)):
+                bbox = [x, y, w, h]
+                label = 1
+                return bbox, label
 
-		# if no person detected or lost
-		bbox = [1, 1, 1, 1]
-		label = 0		#label < 0.5 stop the robpt
-		return bbox, label
+        # if no person detected or lost
+        bbox = [1, 1, 1, 1]
+        label = 0       #label < 0.5 stop the robpt
+        return bbox, label
