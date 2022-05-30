@@ -273,11 +273,11 @@ class Detector(object):
         self.model = Net(n_feature = 1632, n_hidden = 128, n_output = 5, n_c = 3)     # define the network
 
         self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='best3.pt')
-		self.model_p = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+        self.model_p = torch.hub.load('ultralytics/yolov5', 'yolov5s')
         self.init = 0
         self.kf = KalmanFilter()
         self.lost_count = 0
-		self.lost = 0
+        self.lost = 0
 
 
     def load(self, PATH):
