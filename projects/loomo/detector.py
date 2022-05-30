@@ -9,6 +9,7 @@ from PIL import Image
 import torch
 import torch.nn.functional as F
 import scipy.linalg
+import cv2
 
 chi2inv95 = {
     1: 3.8415,

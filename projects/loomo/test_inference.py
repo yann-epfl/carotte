@@ -15,6 +15,7 @@ import sys
 import numpy
 import struct
 import binascii
+import scipy.linalg
 
 import argparse
 
