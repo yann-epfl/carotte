@@ -316,9 +316,9 @@ class Detector(object):
                 a = w/h
 
                 if (x_star in range(x1,x2) and (y_star in range(y1,y2))):
-                    bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
+                    #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
 
-                    bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+                    #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
                     img_cropped = img[y1:y2,x1:x2]
                     #cv2_imshow(img_cropped)
