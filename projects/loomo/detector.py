@@ -272,7 +272,8 @@ class Detector(object):
     def __init__(self):
         super(Detector, self).__init__()
 
-        self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='good_logo.pt')
+        #self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='good_logo.pt')
+        self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='best3.pt')
         self.model_p = torch.hub.load('ultralytics/yolov5', 'yolov5s')
         self.init = 0
         self.kf = KalmanFilter()
