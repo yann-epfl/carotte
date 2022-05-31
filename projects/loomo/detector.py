@@ -337,10 +337,10 @@ class Detector(object):
 
                         #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
-                        img_cropped = img.crop((x1,y1,x2,y2)) #(left, top, right, bottom)
+                        #img_cropped = img.crop((x1,y1,x2,y2)) #(left, top, right, bottom)
                         #cv2_imshow(img_cropped)
-                        features = self.extractor(img_cropped)
-                        features_init = features.cpu().numpy()[0]
+                        #features = self.extractor(img_cropped)
+                        #features_init = features.cpu().numpy()[0]
                         #print(features_init.cpu().numpy()[0])
 
                         #initiate Kalman filter
@@ -387,22 +387,22 @@ class Detector(object):
                     a = w/h
 
                     img_cropped = img[y1:y2,x1:x2]
-                    features = self.extractor(img_cropped)
-                    features_new = features.cpu().numpy()[0]
-                    similarity = cosine_sim(features_init,features_new)
+                    #features = self.extractor(img_cropped)
+                    #features_new = features.cpu().numpy()[0]
+                    #similarity = cosine_sim(features_init,features_new)
                     #print(i)
                     #print(similarity)
                     #cv2_imshow(img_cropped)
-                    if (similarity>0.80): #and (euclid_dist(x,y,x_pred,y_pred)<300):
+                    #if (similarity>0.80): #and (euclid_dist(x,y,x_pred,y_pred)<300):
 
-                        measurement = [x, y, a, h]
-                        reid_measurement_found = 1
-                        self.lost_count = 0
+                        #measurement = [x, y, a, h]
+                        #reid_measurement_found = 1
+                        #self.lost_count = 0
 
                         #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
                         #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
               
-                elif(euclid_dist(x,y,x_pred,y_pred)<100) and not(reid_measurement_found) and not(self.lost):
+                elif(euclid_dist(x,y,x_pred,y_pred)<100) and not(self.lost):
 
                     measurement = [x, y, a, h]
                     kalman_measurement_found = 1
@@ -411,7 +411,7 @@ class Detector(object):
                     #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,255,0),2)
                     #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
-            if(not(reid_measurement_found) and not(kalman_measurement_found)):
+            if(not(kalman_measurement_found)):
                 self.lost_count += 1
 
             if(self.lost_count>=5):
