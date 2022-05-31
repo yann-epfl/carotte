@@ -271,17 +271,6 @@ class Detector(object):
     """docstring for Detector"""
     def __init__(self):
         super(Detector, self).__init__()
-        # TODO: MEAN & STD
-        #self.mean = [[[[0.5548078,  0.56693329, 0.53457436]]]] 
-        #self.std = [[[[0.26367019, 0.26617227, 0.25692861]]]]
-        #self.img_size = 100 
-        #self.img_size_w = 80
-        #self.img_size_h = 60
-        #self.min_object_size = 10
-        #self.max_object_size = 40 
-        #self.num_objects = 1
-        #self.num_channels = 3
-        #self.model = Net(n_feature = 1632, n_hidden = 128, n_output = 5, n_c = 3)     # define the network
 
         self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='good_logo.pt')
         self.model_p = torch.hub.load('ultralytics/yolov5', 'yolov5s')
@@ -309,56 +298,58 @@ class Detector(object):
         self.model.eval()
 
     def forward(self, img):   
-        
 
         if not(self.init):
+
+            #find init symbol
             results = self.model_best(img)
+
+            #if init symbol found
             if(results.xyxy[0].nelement()!=0):
                 x1 = results.xyxy[0][0][0].cpu().detach().numpy()
                 y1 = results.xyxy[0][0][1].cpu().detach().numpy()
                 x2 = results.xyxy[0][0][2].cpu().detach().numpy()
                 y2 = results.xyxy[0][0][3].cpu().detach().numpy()
 
-                x_star=int((abs(x2-x1)/2)+x1)
-                y_star=int((abs(y2-y1)/2)+y1)
+                x_symbol=int((abs(x2-x1)/2)+x1)
+                y_symbol=int((abs(y2-y1)/2)+y1)
 
+                #find persons with YOLOv5 small
                 results_p = self.model_p(img)
-                for i in range(int(results_p.xyxy[0].nelement()/6)): #for on the number of person detected
-                  if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0): #if class person and confidence over 60%
-                    x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
-                    y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
-                    x2 = int(results_p.xyxy[0][i][2].cpu().detach().numpy())
-                    y2 = int(results_p.xyxy[0][i][3].cpu().detach().numpy())
 
-                    w = int(abs(x1-x2))
-                    h = int(abs(y1-y2))
-                    x = x1+w/2
-                    y = y1+h/2
-                    a = w/h
+                #for on the number of person detected
+                for i in range(int(results_p.xyxy[0].nelement()/6)):
 
-                    if (x_star in range(x1,x2) and (y_star in range(y1,y2))):
-                        #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
+                    #if class person and confidence over 60%
+                    if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0): 
+                        x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
+                        y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
+                        x2 = int(results_p.xyxy[0][i][2].cpu().detach().numpy())
+                        y2 = int(results_p.xyxy[0][i][3].cpu().detach().numpy())
 
-                        #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+                        w = int(abs(x1-x2))
+                        h = int(abs(y1-y2))
+                        x = x1+w/2
+                        y = y1+h/2
+                        a = w/h
 
-                        #img_cropped = img.crop((x1,y1,x2,y2)) #(left, top, right, bottom)
-                        #cv2_imshow(img_cropped)
-                        #features = self.extractor(img_cropped)
-                        #features_init = features.cpu().numpy()[0]
-                        #print(features_init.cpu().numpy()[0])
+                        #if symbol detected inside person box
+                        if (x_symbol in range(x1,x2) and (y_symbol in range(y1,y2))):
+                            
+                            #initiate Kalman filter
+                            self.measurement = [x, y, a, h]
+                            self.mean, self.cov = self.kf.initiate(self.measurement)
+                            self.init = 1
 
-                        #initiate Kalman filter
-                        self.measurement = [x, y, a, h]
-                        self.mean, self.cov = self.kf.initiate(self.measurement)
-                        self.init = 1
-
-                        bbox = [x, y, w, h]
-                        label = [1]
-                        return bbox, label
+                            bbox = [x, y, w, h]
+                            label = [1]
+                            return bbox, label
 
         elif self.init:
-            reid_measurement_found = 0
             kalman_measurement_found = 0
+            symbol_found = 0
+
+            #prediction step Kalman
             mean_pred, cov_pred = self.kf.predict(self.mean, self.cov)
 
             #calc pred bbox parameters
@@ -372,12 +363,28 @@ class Detector(object):
             x2_pred = int(x_pred+w_pred/2)
             y2_pred = int(y_pred+h_pred/2)
 
-            #add pred bbox
-            #bbox_array = cv2.rectangle(bbox_array,(x1_pred,y1_pred),(x2_pred,y2_pred),(0,0,255),2)
-            #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+            #find init symbol
+            results = self.model_best(img)
 
+            #if init symbol found
+            if(results.xyxy[0].nelement()!=0):
+                x1 = results.xyxy[0][0][0].cpu().detach().numpy()
+                y1 = results.xyxy[0][0][1].cpu().detach().numpy()
+                x2 = results.xyxy[0][0][2].cpu().detach().numpy()
+                y2 = results.xyxy[0][0][3].cpu().detach().numpy()
+
+                x_symbol=int((abs(x2-x1)/2)+x1)
+                y_symbol=int((abs(y2-y1)/2)+y1)
+
+                symbol_found = 1
+
+            #find persons with YOLOv5 small
             results_p = self.model_p(img)
+
+            #for on the number of person detected
             for i in range(int(results_p.xyxy[0].nelement()/6)):
+
+                #if class person and confidence over 60%
                 if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0):
                     x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
                     y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
@@ -389,54 +396,50 @@ class Detector(object):
                     x = x1+w/2
                     y = y1+h/2
                     a = w/h
+                    
+                    if(symbol_found):
+                        #if symbol detected inside person box
+                        if (x_symbol in range(x1,x2) and (y_symbol in range(y1,y2))):
+                            
+                            #update measurement with box of person with symbol
+                            self.measurement = [x, y, a, h]
+                            kalman_measurement_found = 1
+                            self.lost_count = 0
 
-                    #img_cropped = img[y1:y2,x1:x2]
-                    #features = self.extractor(img_cropped)
-                    #features_new = features.cpu().numpy()[0]
-                    #similarity = cosine_sim(features_init,features_new)
-                    #print(i)
-                    #print(similarity)
-                    #cv2_imshow(img_cropped)
-                    #if (similarity>0.80): #and (euclid_dist(x,y,x_pred,y_pred)<300):
-
-                        #measurement = [x, y, a, h]
-                        #reid_measurement_found = 1
-                        #self.lost_count = 0
-
-                        #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
-                        #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
-              
-                    if(euclid_dist(x,y,x_pred,y_pred)<100) and not(self.lost):
-
+                    #if person box close to pred and not lost
+                    elif(euclid_dist(x,y,x_pred,y_pred)<100) and not(self.lost):
                         self.measurement = [x, y, a, h]
                         kalman_measurement_found = 1
                         self.lost_count = 0
 
-                        #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,255,0),2)
-                        #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
-
+            #check if lost
             if(not(kalman_measurement_found)):
                 self.lost_count += 1
-
-            if(self.lost_count>=5):
+            #if no person found for more than 20 frames
+            if(self.lost_count>=20):
                 self.lost = 1
+                self.init = 0
+            #if someone was found
             else:
                 self.lost = 0
 
-            self.mean, self.cov = self.kf.update(mean_pred, cov_pred, self.measurement)
-            #calc update bbox parameters
-            x = self.mean[0]
-            y = self.mean[1]
-            a = self.mean[2]
-            h = self.mean[3]
-            w = a*h
-            x1 = int(x-w/2)
-            y1 = int(y-h/2)
-            x2 = int(x+w/2)
-            y2 = int(y+h/2)
-
-            #add update bbox
             if (not(self.lost)):
+
+                #update Kalaman filter
+                self.mean, self.cov = self.kf.update(mean_pred, cov_pred, self.measurement)
+                
+                #calc update bbox parameters
+                x = self.mean[0]
+                y = self.mean[1]
+                a = self.mean[2]
+                h = self.mean[3]
+                w = a*h
+                x1 = int(x-w/2)
+                y1 = int(y-h/2)
+                x2 = int(x+w/2)
+                y2 = int(y+h/2)
+
+                #send info to client
                 bbox = [x, y, w, h]
                 label = [1]
                 return bbox, label
