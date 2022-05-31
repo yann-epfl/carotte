@@ -261,16 +261,16 @@ class Detector(object):
     def __init__(self):
         super(Detector, self).__init__()
         # TODO: MEAN & STD
-        self.mean = [[[[0.5548078,  0.56693329, 0.53457436]]]] 
-        self.std = [[[[0.26367019, 0.26617227, 0.25692861]]]]
-        self.img_size = 100 
-        self.img_size_w = 80
-        self.img_size_h = 60
-        self.min_object_size = 10
-        self.max_object_size = 40 
-        self.num_objects = 1
-        self.num_channels = 3
-        self.model = Net(n_feature = 1632, n_hidden = 128, n_output = 5, n_c = 3)     # define the network
+        #self.mean = [[[[0.5548078,  0.56693329, 0.53457436]]]] 
+        #self.std = [[[[0.26367019, 0.26617227, 0.25692861]]]]
+        #self.img_size = 100 
+        #self.img_size_w = 80
+        #self.img_size_h = 60
+        #self.min_object_size = 10
+        #self.max_object_size = 40 
+        #self.num_objects = 1
+        #self.num_channels = 3
+        #self.model = Net(n_feature = 1632, n_hidden = 128, n_output = 5, n_c = 3)     # define the network
 
         self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='good_logo.pt')
         self.model_p = torch.hub.load('ultralytics/yolov5', 'yolov5s')
@@ -288,36 +288,7 @@ class Detector(object):
         self.model.eval()
 
     def forward(self, img):   
-        ##Add a dimension
-        img = np.expand_dims(img.transpose(1,0,2), 0) / 255
-
-        ch1 = img[:,:,:,0].copy()
-        ch3 = img[:,:,:,2].copy()
-
-        img[:,:,:,0] = ch3
-        img[:,:,:,2] = ch1
-
-        # print(img.shape)   
-        # print(img)
-
-        ##Preprocess
-        img = (img - self.mean)/self.std
-
-        ##Transpose to model format
-        if(img.shape[1] != self.num_channels):
-            img = img.transpose((0,3,1,2))
-
-        # print(img.shape)
-        # print(img)
-
-        ##Detect
-        with torch.no_grad():
-            pred_y_box, pred_y_logit = self.model.forward(torch.tensor(img, dtype=torch.float32))
-
-            pred_y_box, pred_y_logit = pred_y_box.numpy(), pred_y_logit.numpy()
-            pred_y_label = pred_y_logit > 0.5
-            pred_bboxes = pred_y_box * self.img_size
-            # pred_bboxes = pred_bboxes.reshape(len(pred_bboxes), num_objects, -1)
+        
 
         if not(self.init):
             results = self.model_best(img)
