@@ -332,7 +332,7 @@ class Detector(object):
                     self.init = 1
 
                     bbox = [x, y, w, h]
-                    label = 1
+                    label = [1]
                     return bbox, label
 
         elif self.init:
@@ -417,10 +417,10 @@ class Detector(object):
             #add update bbox
             if (not(self.lost)):
                 bbox = [x, y, w, h]
-                label = 1
+                label = [1]
                 return bbox, label
 
         # if no person detected or lost
         bbox = [1, 1, 1, 1]
-        label = 0       #label < 0.5 stop the robpt
+        label = [0]       #label < 0.5 stop the robpt
         return bbox, label
