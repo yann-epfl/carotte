@@ -272,8 +272,8 @@ class Detector(object):
     def __init__(self):
         super(Detector, self).__init__()
 
-        #self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='good_logo.pt')
-        self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='best3.pt')
+        self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='good_logo.pt')
+        #self.model_best = torch.hub.load('ultralytics/yolov5', 'custom', path='best3.pt')
         self.model_p = torch.hub.load('ultralytics/yolov5', 'yolov5s')
         self.init = 0
         self.kf = KalmanFilter()
@@ -406,12 +406,14 @@ class Detector(object):
                             self.measurement = [x, y, a, h]
                             kalman_measurement_found = 1
                             self.lost_count = 0
+                            print("YOLO")
 
                     #if person box close to pred and not lost
                     elif(euclid_dist(x,y,x_pred,y_pred)<100) and not(self.lost):
                         self.measurement = [x, y, a, h]
                         kalman_measurement_found = 1
                         self.lost_count = 0
+                        print("Kalman")
 
             #check if lost
             if(not(kalman_measurement_found)):
