@@ -406,14 +406,14 @@ class Detector(object):
                         #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
                         #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
               
-                elif(euclid_dist(x,y,x_pred,y_pred)<100) and not(self.lost):
+                    if(euclid_dist(x,y,x_pred,y_pred)<100) and not(self.lost):
 
-                    self.measurement = [x, y, a, h]
-                    kalman_measurement_found = 1
-                    self.lost_count = 0
+                        self.measurement = [x, y, a, h]
+                        kalman_measurement_found = 1
+                        self.lost_count = 0
 
-                    #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,255,0),2)
-                    #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+                        #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,255,0),2)
+                        #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
             if(not(kalman_measurement_found)):
                 self.lost_count += 1
