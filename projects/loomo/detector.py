@@ -11,6 +11,9 @@ import torch.nn.functional as F
 import scipy.linalg
 import cv2
 
+from torchreid.utils import FeatureExtractor
+import math
+
 chi2inv95 = {
     1: 3.8415,
     2: 5.9915,
@@ -21,6 +24,14 @@ chi2inv95 = {
     7: 14.067,
     8: 15.507,
     9: 16.919}
+
+def cosine_sim(A,B):
+    cosine = np.dot(A,B)/(norm(A)*norm(B))
+    return cosine
+
+def euclid_dist(x1,y1,x2,y2):
+    dist = math.sqrt((x1-x2)**2+(y1-y2)**2)
+    return dist
 
 class KalmanFilter(object):
     """
@@ -279,6 +290,12 @@ class Detector(object):
         self.lost_count = 0
         self.lost = 0
 
+        self.extractor = FeatureExtractor(
+            model_name='osnet_x1_0',
+            model_path='a/b/c/model.pth.tar',
+            device='cuda'
+        )
+
 
     def load(self, PATH):
         # self.model = torch.load(PATH)
@@ -322,7 +339,7 @@ class Detector(object):
 
                         img_cropped = img.crop((x1,y1,x2,y2)) #(left, top, right, bottom)
                         #cv2_imshow(img_cropped)
-                        features = extractor(img_cropped)
+                        features = self.extractor(img_cropped)
                         features_init = features.cpu().numpy()[0]
                         #print(features_init.cpu().numpy()[0])
 
@@ -370,7 +387,7 @@ class Detector(object):
                     a = w/h
 
                     img_cropped = img[y1:y2,x1:x2]
-                    features = extractor(img_cropped)
+                    features = self.extractor(img_cropped)
                     features_new = features.cpu().numpy()[0]
                     similarity = cosine_sim(features_init,features_new)
                     #print(i)
