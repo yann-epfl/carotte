@@ -296,6 +296,9 @@ class Detector(object):
             device='cuda'
         )
 
+        self.mean = 0
+        self.cov
+
 
     def load(self, PATH):
         # self.model = torch.load(PATH)
@@ -345,7 +348,7 @@ class Detector(object):
 
                         #initiate Kalman filter
                         measurement = [x, y, a, h]
-                        mean, cov = self.kf.initiate(measurement)
+                        self.mean, self.cov = self.kf.initiate(measurement)
                         self.init = 1
 
                         bbox = [x, y, w, h]
@@ -355,7 +358,7 @@ class Detector(object):
         elif self.init:
             reid_measurement_found = 0
             kalman_measurement_found = 0
-            mean_pred, cov_pred = self.kf.predict(mean, cov)
+            mean_pred, cov_pred = self.kf.predict(self.mean, self.cov)
 
             #calc pred bbox parameters
             x_pred = mean_pred[0]
@@ -419,12 +422,12 @@ class Detector(object):
             else:
                 self.lost = 0
 
-            mean, cov = self.kf.update(mean_pred, cov_pred, measurement)
+            self.mean, self.cov = self.kf.update(mean_pred, cov_pred, measurement)
             #calc update bbox parameters
-            x = mean[0]
-            y = mean[1]
-            a = mean[2]
-            h = mean[3]
+            x = self.mean[0]
+            y = self.mean[1]
+            a = self.mean[2]
+            h = self.mean[3]
             w = a*h
             x1 = int(x-w/2)
             y1 = int(y-h/2)
