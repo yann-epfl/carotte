@@ -320,7 +320,7 @@ class Detector(object):
 
                         #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
-                        img_cropped = img[y1:y2,x1:x2]
+                        img_cropped = img.crop((x1,y2,x2,y1)) #(left, top, right, bottom)
                         #cv2_imshow(img_cropped)
                         features = extractor(img_cropped)
                         features_init = features.cpu().numpy()[0]
