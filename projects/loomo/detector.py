@@ -389,7 +389,7 @@ class Detector(object):
                     y = y1+h/2
                     a = w/h
 
-                    img_cropped = img[y1:y2,x1:x2]
+                    #img_cropped = img[y1:y2,x1:x2]
                     #features = self.extractor(img_cropped)
                     #features_new = features.cpu().numpy()[0]
                     #similarity = cosine_sim(features_init,features_new)
