@@ -298,6 +298,7 @@ class Detector(object):
 
         self.mean = 0
         self.cov = []
+        self.measurement = []
 
 
     def load(self, PATH):
@@ -347,8 +348,8 @@ class Detector(object):
                         #print(features_init.cpu().numpy()[0])
 
                         #initiate Kalman filter
-                        measurement = [x, y, a, h]
-                        self.mean, self.cov = self.kf.initiate(measurement)
+                        self.measurement = [x, y, a, h]
+                        self.mean, self.cov = self.kf.initiate(self.measurement)
                         self.init = 1
 
                         bbox = [x, y, w, h]
@@ -407,7 +408,7 @@ class Detector(object):
               
                 elif(euclid_dist(x,y,x_pred,y_pred)<100) and not(self.lost):
 
-                    measurement = [x, y, a, h]
+                    self.measurement = [x, y, a, h]
                     kalman_measurement_found = 1
                     self.lost_count = 0
 
@@ -422,7 +423,7 @@ class Detector(object):
             else:
                 self.lost = 0
 
-            self.mean, self.cov = self.kf.update(mean_pred, cov_pred, measurement)
+            self.mean, self.cov = self.kf.update(mean_pred, cov_pred, self.measurement)
             #calc update bbox parameters
             x = self.mean[0]
             y = self.mean[1]
