@@ -297,7 +297,7 @@ class Detector(object):
         )
 
         self.mean = 0
-        self.cov
+        self.cov = []
 
 
     def load(self, PATH):
