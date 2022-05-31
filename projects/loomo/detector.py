@@ -301,39 +301,39 @@ class Detector(object):
                 x_star=int((abs(x2-x1)/2)+x1)
                 y_star=int((abs(y2-y1)/2)+y1)
 
-            results_p = self.model_p(img)
-            for i in range(int(results_p.xyxy[0].nelement()/6)): #for on the number of person detected
-              if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0): #if class person and confidence over 60%
-                x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
-                y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
-                x2 = int(results_p.xyxy[0][i][2].cpu().detach().numpy())
-                y2 = int(results_p.xyxy[0][i][3].cpu().detach().numpy())
+                results_p = self.model_p(img)
+                for i in range(int(results_p.xyxy[0].nelement()/6)): #for on the number of person detected
+                  if (results_p.xyxy[0][i][4]>0.6) and (results_p.xyxy[0][i][5]==0): #if class person and confidence over 60%
+                    x1 = int(results_p.xyxy[0][i][0].cpu().detach().numpy())
+                    y1 = int(results_p.xyxy[0][i][1].cpu().detach().numpy())
+                    x2 = int(results_p.xyxy[0][i][2].cpu().detach().numpy())
+                    y2 = int(results_p.xyxy[0][i][3].cpu().detach().numpy())
 
-                w = int(abs(x1-x2))
-                h = int(abs(y1-y2))
-                x = x1+w/2
-                y = y1+h/2
-                a = w/h
+                    w = int(abs(x1-x2))
+                    h = int(abs(y1-y2))
+                    x = x1+w/2
+                    y = y1+h/2
+                    a = w/h
 
-                if (x_star in range(x1,x2) and (y_star in range(y1,y2))):
-                    #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
+                    if (x_star in range(x1,x2) and (y_star in range(y1,y2))):
+                        #bbox_array = cv2.rectangle(bbox_array,(x1,y1),(x1+w,y1+h),(255,0,0),2)
 
-                    #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
+                        #bbox_array[:,:,3] = (bbox_array.max(axis = 2) > 0 ).astype(int) * 255
 
-                    img_cropped = img[y1:y2,x1:x2]
-                    #cv2_imshow(img_cropped)
-                    features = extractor(img_cropped)
-                    features_init = features.cpu().numpy()[0]
-                    #print(features_init.cpu().numpy()[0])
+                        img_cropped = img[y1:y2,x1:x2]
+                        #cv2_imshow(img_cropped)
+                        features = extractor(img_cropped)
+                        features_init = features.cpu().numpy()[0]
+                        #print(features_init.cpu().numpy()[0])
 
-                    #initiate Kalman filter
-                    measurement = [x, y, a, h]
-                    mean, cov = self.kf.initiate(measurement)
-                    self.init = 1
+                        #initiate Kalman filter
+                        measurement = [x, y, a, h]
+                        mean, cov = self.kf.initiate(measurement)
+                        self.init = 1
 
-                    bbox = [x, y, w, h]
-                    label = [1]
-                    return bbox, label
+                        bbox = [x, y, w, h]
+                        label = [1]
+                        return bbox, label
 
         elif self.init:
             reid_measurement_found = 0
